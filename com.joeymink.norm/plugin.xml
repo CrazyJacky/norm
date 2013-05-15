@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+
+<plugin>
+
+  <extension point="org.eclipse.emf.ecore.generated_package">
+    <package 
+       uri = "http://www.joeymink.com/norm/Norm" 
+       class = "com.joeymink.norm.norm.NormPackage"
+       genModel = "com/joeymink/norm/Norm.genmodel" /> 
+	
+  </extension>
+
+
+
+
+</plugin>

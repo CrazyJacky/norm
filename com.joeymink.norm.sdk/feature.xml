@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature id="com.joeymink.norm.sdk"
+	label="Norm SDK Feature "
+	version="1.0.0.qualifier">
+	<plugin
+			id="com.joeymink.norm"
+			download-size="0"
+			install-size="0"
+			version="0.0.0"
+			unpack="false"/>
+	<plugin
+			id="com.joeymink.norm.ui"
+			download-size="0"
+			install-size="0"
+			version="0.0.0"
+			unpack="false"/>
+</feature>

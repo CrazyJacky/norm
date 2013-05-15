@@ -4,3 +4,19 @@
 *.jar
 *.war
 *.ear
+
+# eclipse stuff
+.metadata/
+
+# build stuff
+com.joeymink.norm.ui/bin/
+com.joeymink.norm/bin/
+
+# generated source
+com.joeymink.norm.tests/src-gen/
+com.joeymink.norm.ui/src-gen/
+com.joeymink.norm.ui/plugin.xml_gen
+com.joeymink.norm/src-gen/
+com.joeymink.norm/xtend-gen/
+com.joeymink.norm/plugin.xml_gen
+

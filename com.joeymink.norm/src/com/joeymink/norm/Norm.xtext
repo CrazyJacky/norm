@@ -1,0 +1,50 @@
+grammar com.joeymink.norm.Norm with org.eclipse.xtext.common.Terminals
+
+generate norm "http://www.joeymink.com/norm/Norm"
+
+NormFile:
+	entities+=Entity*
+	normalizations+=Normalization*
+;
+
+Entity:
+	'entity' name=ID '{'
+	attributes=Attributes
+	((uniques+=Unique ',')* uniques+=Unique)*
+	'}'
+;
+
+Attributes:
+	'attributes' '{'
+//	(attributes+=Attribute ',')* attributes+=Attribute
+	attributes+=Attribute+
+	'}'
+;
+
+Attribute:
+	name=ID reference=Reference?
+;
+
+Reference:
+	'refs' attribute=[Entity]
+;
+
+
+Unique:
+	'unique' (attributes+=[Attribute] ',')* attributes+=[Attribute]
+;
+
+Normalization:
+	'norm' name=ID 'as' entity_type=[Entity] '{'
+	mappings+=Mapping+
+	'}'
+;
+
+Mapping:
+	'map' attribute=[Attribute] 'as' field=FieldExpression
+;
+
+FieldExpression:
+	((fields+=STRING '+')* fields+=STRING)
+;
+
