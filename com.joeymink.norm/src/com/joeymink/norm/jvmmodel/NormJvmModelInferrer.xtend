@@ -50,6 +50,16 @@ class NormJvmModelInferrer extends AbstractModelInferrer {
    	def dispatch void infer(NormFile normFile, IJvmDeclaredTypeAcceptor acceptor, boolean isPreIndexingPhase) {
    		// Here you explain how your model is mapped to Java elements, by writing the actual translation code.
 
+		if (normFile.normalizations != null) {	// Create the main method
+			acceptor.accept(normFile.toClass(normFile.name)).initializeLater [
+				members += normFile.toMethod("main", normFile.newTypeRef(Void::TYPE)) [
+   	    			parameters += normFile.toParameter("args", normFile.newTypeRef(typeof(String)).addArrayTypeDimension)
+   	    			setStatic(true)
+   	    			varArgs = true
+				]
+			]
+		}
+
 		for (e : normFile.entities) {	// for each Entity e defined in the DSL:
 			// Declare the class name for the Entity's Java twin
 			acceptor.accept(e.toClass(e.name)).initializeLater [
