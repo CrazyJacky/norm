@@ -4,8 +4,10 @@ generate norm "http://www.joeymink.com/norm/Norm"
 import "http://www.eclipse.org/xtext/xbase/Xbase"
 
 NormFile:
+	'normalization' name=QualifiedName '{'
 	entities+=Entity*
 	normalizations+=Normalization*
+	'}'
 ;
 
 Entity:
