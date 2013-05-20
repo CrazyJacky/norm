@@ -3,9 +3,29 @@
  */
 package com.joeymink.norm;
 
+import org.eclipse.xtext.scoping.IScopeProvider;
+import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider;
+
+import com.google.inject.name.Names;
+import com.joeymink.norm.scoping.MyAbstractDeclarativeScopeProvider;
+import com.joeymink.norm.scoping.NormDeclarativeScopeProvider;
+
 /**
- * Use this class to register components to be used at runtime / without the Equinox extension registry.
+ * Use this class to register components to be used at runtime / without the
+ * Equinox extension registry.
  */
 public class NormRuntimeModule extends com.joeymink.norm.AbstractNormRuntimeModule {
+	public void configureIScopeProviderDelegate2(com.google.inject.Binder binder) {
+		binder.bind(IScopeProvider.class)
+				.annotatedWith(
+						Names.named(AbstractDeclarativeScopeProvider.NAMED_DELEGATE))
+				.to(NormDeclarativeScopeProvider.class);
+	}
 
+	public void configureIScopeProviderDelegate(com.google.inject.Binder binder) {
+		binder.bind(org.eclipse.xtext.scoping.IScopeProvider.class)
+				.annotatedWith(
+						Names.named(MyAbstractDeclarativeScopeProvider.NAMED_DELEGATE))
+				.to(org.eclipse.xtext.xbase.scoping.XbaseImportedNamespaceScopeProvider.class);
+	}
 }

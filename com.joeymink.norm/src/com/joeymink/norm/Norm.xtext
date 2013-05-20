@@ -1,6 +1,7 @@
-grammar com.joeymink.norm.Norm with org.eclipse.xtext.common.Terminals
+grammar com.joeymink.norm.Norm with org.eclipse.xtext.xbase.Xbase
 
 generate norm "http://www.joeymink.com/norm/Norm"
+import "http://www.eclipse.org/xtext/xbase/Xbase"
 
 NormFile:
 	entities+=Entity*
