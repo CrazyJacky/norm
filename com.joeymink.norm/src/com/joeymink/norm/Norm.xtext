@@ -44,10 +44,7 @@ Normalization:
 ;
 
 Mapping:
-	'map' attribute=[Attribute] 'as' field=FieldExpression
+	'map' attribute=[Attribute] 'as' field=STRING
 ;
 
-FieldExpression:
-	((fields+=STRING '+')* fields+=STRING)
-;
 
