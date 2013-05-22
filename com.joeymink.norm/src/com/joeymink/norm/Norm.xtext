@@ -12,14 +12,13 @@ NormFile:
 
 Entity:
 	'entity' name=ID '{'
-	attributes=Attributes
+	attributes=Attributes?
 	((uniques+=Unique ',')* uniques+=Unique)*
 	'}'
 ;
 
 Attributes:
 	'attributes' '{'
-//	(attributes+=Attribute ',')* attributes+=Attribute
 	attributes+=Attribute+
 	'}'
 ;
