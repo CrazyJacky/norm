@@ -5,9 +5,8 @@ import org.eclipse.xtext.xbase.jvmmodel.AbstractModelInferrer
 import org.eclipse.xtext.xbase.jvmmodel.IJvmDeclaredTypeAcceptor
 import org.eclipse.xtext.xbase.jvmmodel.JvmTypesBuilder
 import com.joeymink.norm.norm.NormFile
-import org.eclipse.xtext.common.types.JvmDeclaredType
-import com.joeymink.norm.norm.Entity
-import com.joeymink.norm.norm.Attribute
+import com.joeymink.norm.norm.Normalization
+import org.eclipse.xtext.naming.IQualifiedNameProvider
 
 /**
  * <p>Infers a JVM model from the source model.</p> 
@@ -21,6 +20,8 @@ class NormJvmModelInferrer extends AbstractModelInferrer {
      * convenience API to build and initialize JVM types and their members.
      */
 	@Inject extension JvmTypesBuilder
+	
+	@Inject extension IQualifiedNameProvider
 
 	/**
 	 * The dispatch method {@code infer} is called for each instance of the
@@ -50,21 +51,39 @@ class NormJvmModelInferrer extends AbstractModelInferrer {
    	def dispatch void infer(NormFile normFile, IJvmDeclaredTypeAcceptor acceptor, boolean isPreIndexingPhase) {
    		// Here you explain how your model is mapped to Java elements, by writing the actual translation code.
 
-		for (e : normFile.entities) {	// for each Entity e defined in the DSL:
-			// Declare the class name for the Entity's Java twin
-			acceptor.accept(e.toClass(e.name)).initializeLater [
-				// For each Attribute a defined in Entity e:
-				for (a : e.attributes.attributes) {
-					createProperty(e, a)
-				}
+		if (normFile.normalizations != null) {	// Create the main method
+			for (norm : normFile.normalizations)
+				inferNorm(acceptor, norm)
+			acceptor.accept(normFile.toClass(normFile.name + ".Main")).initializeLater [
+				members += normFile.toMethod("main", normFile.newTypeRef(Void::TYPE)) [
+   	    			parameters += normFile.toParameter("args", normFile.newTypeRef(typeof(String)).addArrayTypeDimension)
+   	    			setStatic(true)
+   	    			varArgs = true
+   	    			body = [append('''
+						«FOR norm : normFile.normalizations»
+							// TODO: «norm.name» «norm.name»_inst = new «norm.name»(); 
+						«ENDFOR»
+   	    			''')]
+				]
 			]
-   		}
+		}
    	}
    	
-   	def protected createProperty(JvmDeclaredType inferredType, Entity entity, Attribute attribute) {
-   		var privateField = '_' + attribute.name
-   		inferredType.members += entity.toField(privateField, newTypeRef(entity, typeof(String)))
-   		inferredType.members += entity.toGetter(attribute.name, privateField, newTypeRef(entity, typeof(String)))
+   	def protected inferNorm(IJvmDeclaredTypeAcceptor acceptor, Normalization norm) {
+   		acceptor.accept(norm.toClass(norm.fullyQualifiedName)).initializeLater [
+			superTypes += newTypeRef(norm, 'com.joeymink.norm.lib.INormalization')
+			members += norm.toMethod("normalize", norm.newTypeRef(Void::TYPE)) [
+				parameters += norm.toParameter("inputRecord", newTypeRef(norm, 'com.joeymink.norm.lib.INormInputRecord'))
+				parameters += norm.toParameter("output", newTypeRef(norm, 'com.joeymink.norm.lib.INormOutput'))
+    			body = [append('''
+    				com.joeymink.norm.lib.OutputEntity entity = new com.joeymink.norm.lib.OutputEntity();
+    				entity.name = "«norm.entity_type.name»";
+					«FOR mapping : norm.mappings»
+	    				entity.fields.put("«mapping.attribute.name»", inputRecord.getField("«mapping.field»"));
+					«ENDFOR»
+    			''')]
+			]
+		]
    	}
 }
 
