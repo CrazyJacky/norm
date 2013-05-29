@@ -60,9 +60,29 @@ class NormJvmModelInferrer extends AbstractModelInferrer {
    	    			setStatic(true)
    	    			varArgs = true
    	    			body = [append('''
+   	    				try {
+   	    					
+						java.io.File file = new java.io.File(args[0]);
+						if (!file.exists()) {
+							System.err.println("File, " + args[0] + ", does not exist.");
+							System.exit(1);
+						}
+						
+						com.joeymink.norm.lib.INormInput input = new com.joeymink.norm.lib.csv.NormInputCsv(file).init();
+						com.joeymink.norm.lib.INormOutput output = new com.joeymink.norm.lib.stdio.NormOutputStdout(); 
+						
+						// Instantiate all Entity Normalizers:
+						java.util.List<com.joeymink.norm.lib.INormalization> norms = new java.util.ArrayList<com.joeymink.norm.lib.INormalization>();
 						«FOR norm : normFile.normalizations»
-							// TODO: «norm.name» «norm.name»_inst = new «norm.name»(); 
+							norms.add(new «norm.name»());
 						«ENDFOR»
+						
+						for (com.joeymink.norm.lib.INormInputRecord inputRecord : input) {
+							for (com.joeymink.norm.lib.INormalization norm : norms)
+								norm.normalize(inputRecord, output);
+						}
+						
+						} catch (Throwable e) { System.out.println(e); System.exit(1); }
    	    			''')]
 				]
 			]
@@ -81,6 +101,7 @@ class NormJvmModelInferrer extends AbstractModelInferrer {
 					«FOR mapping : norm.mappings»
 	    				entity.fields.put("«mapping.attribute.name»", inputRecord.getField("«mapping.field»"));
 					«ENDFOR»
+					output.saveEntity(entity);
     			''')]
 			]
 		]
