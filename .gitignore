@@ -8,9 +8,10 @@
 # eclipse stuff
 .metadata/
 
-# build stuff
+# eclipse build stuff
 com.joeymink.norm.ui/bin/
 com.joeymink.norm/bin/
+com.joeymink.norm.tests/bin
 
 # generated source
 com.joeymink.norm.tests/src-gen/
