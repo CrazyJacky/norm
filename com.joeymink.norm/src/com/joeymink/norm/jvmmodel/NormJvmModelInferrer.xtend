@@ -60,16 +60,28 @@ class NormJvmModelInferrer extends AbstractModelInferrer {
    	    			setStatic(true)
    	    			varArgs = true
    	    			body = [append('''
-   	    				try {
-   	    					
-						java.io.File file = new java.io.File(args[0]);
-						if (!file.exists()) {
-							System.err.println("File, " + args[0] + ", does not exist.");
-							System.exit(1);
-						}
+						try {
+						// Setup input
+						com.joeymink.norm.lib.IoConfig inputConfig = new com.joeymink.norm.lib.IoConfig();
+						inputConfig.setConfigFor(Class.forName("«normFile.input.type.identifier»"));
+						java.util.Map<String, String> inputProperties = new java.util.HashMap<String, String>();
+   	    				«FOR ioProp : normFile.input.properties»
+							inputProperties.put("«ioProp.key»", "«ioProp.value»");
+   	    				«ENDFOR»
+						inputConfig.setProperties(inputProperties);
+						com.joeymink.norm.lib.INormInput input = (com.joeymink.norm.lib.INormInput) inputConfig.getConfigFor().newInstance();
+						input.setConfig(inputConfig);
 						
-						com.joeymink.norm.lib.INormInput input = new com.joeymink.norm.lib.csv.NormInputCsv(file).init();
-						com.joeymink.norm.lib.INormOutput output = new com.joeymink.norm.lib.stdio.NormOutputStdout(); 
+						// Setup output
+						com.joeymink.norm.lib.IoConfig outputConfig = new com.joeymink.norm.lib.IoConfig();
+						outputConfig.setConfigFor(Class.forName("«normFile.output.type.identifier»"));
+						java.util.Map<String, String> outputProperties = new java.util.HashMap<String, String>();
+   	    				«FOR ioProp : normFile.output.properties»
+							outputProperties.put("«ioProp.key»", "«ioProp.value»");
+   	    				«ENDFOR»
+						outputConfig.setProperties(outputProperties);
+						com.joeymink.norm.lib.INormOutput output = (com.joeymink.norm.lib.INormOutput) outputConfig.getConfigFor().newInstance();
+						output.setConfig(outputConfig); 
 						
 						// Instantiate all Entity Normalizers:
 						java.util.List<com.joeymink.norm.lib.INormalization> norms = new java.util.ArrayList<com.joeymink.norm.lib.INormalization>();
@@ -96,10 +108,10 @@ class NormJvmModelInferrer extends AbstractModelInferrer {
 				parameters += norm.toParameter("inputRecord", newTypeRef(norm, 'com.joeymink.norm.lib.INormInputRecord'))
 				parameters += norm.toParameter("output", newTypeRef(norm, 'com.joeymink.norm.lib.INormOutput'))
     			body = [append('''
-    				com.joeymink.norm.lib.OutputEntity entity = new com.joeymink.norm.lib.OutputEntity();
-    				entity.name = "«norm.entity_type.name»";
+					com.joeymink.norm.lib.OutputEntity entity = new com.joeymink.norm.lib.OutputEntity();
+					entity.name = "«norm.entity_type.name»";
 					«FOR mapping : norm.mappings»
-	    				entity.fields.put("«mapping.attribute.name»", inputRecord.getField("«mapping.field»"));
+						entity.fields.put("«mapping.attribute.name»", inputRecord.getField("«mapping.field»"));
 					«ENDFOR»
 					output.saveEntity(entity);
     			''')]
