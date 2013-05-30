@@ -5,10 +5,32 @@ import "http://www.eclipse.org/xtext/xbase/Xbase"
 
 NormFile:
 	'normalization' name=QualifiedName '{'
+	input=Input
+	output=Output
 	entities+=Entity*
 	normalizations+=Normalization*
 	'}'
 ;
+
+// For input/output configuration
+
+Output:
+	'output' type=JvmTypeReference '{'
+		properties+=IOProperty*
+	'}'	
+;
+
+Input:
+	'input' type=JvmTypeReference '{'
+		properties+=IOProperty*
+	'}'
+;
+
+IOProperty:
+	key=ID '='value=STRING 
+;
+
+// Now the good stuff...
 
 Entity:
 	'entity' name=ID '{'
@@ -30,7 +52,6 @@ Attribute:
 Reference:
 	'refs' attribute=[Entity]
 ;
-
 
 Unique:
 	'unique' (attributes+=[Attribute] ',')* attributes+=[Attribute]
