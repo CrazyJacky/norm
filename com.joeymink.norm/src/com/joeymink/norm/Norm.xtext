@@ -35,7 +35,7 @@ IOProperty:
 Entity:
 	'entity' name=ID '{'
 	attributes=Attributes?
-	((uniques+=Unique ',')* uniques+=Unique)*
+	unique=Unique?
 	'}'
 ;
 
@@ -64,7 +64,7 @@ Normalization:
 ;
 
 Mapping:
-	'map' attribute=[Attribute] 'as' field=STRING
+	'map' attribute=[Attribute] 'as' (field=STRING | normalizedEntity=[Normalization])
 ;
 
 
