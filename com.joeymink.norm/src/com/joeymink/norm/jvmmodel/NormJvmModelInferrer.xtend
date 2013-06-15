@@ -7,6 +7,10 @@ import org.eclipse.xtext.xbase.jvmmodel.JvmTypesBuilder
 import com.joeymink.norm.norm.NormFile
 import com.joeymink.norm.norm.Normalization
 import org.eclipse.xtext.naming.IQualifiedNameProvider
+import java.util.List
+import java.util.ArrayList
+import com.joeymink.norm.norm.Unique
+import com.joeymink.norm.norm.Attribute
 
 /**
  * <p>Infers a JVM model from the source model.</p> 
@@ -60,28 +64,51 @@ class NormJvmModelInferrer extends AbstractModelInferrer {
    	    			setStatic(true)
    	    			varArgs = true
    	    			body = [append('''
-						try {
+«««						try {
 						// Setup input
 						com.joeymink.norm.lib.IoConfig inputConfig = new com.joeymink.norm.lib.IoConfig();
-						inputConfig.setConfigFor(Class.forName("«normFile.input.type.identifier»"));
+						try {
+							inputConfig.setConfigFor(Class.forName("«normFile.input.type.identifier»"));
+						} catch (ClassNotFoundException e) { throw new RuntimeException(e); }
 						java.util.Map<String, String> inputProperties = new java.util.HashMap<String, String>();
    	    				«FOR ioProp : normFile.input.properties»
 							inputProperties.put("«ioProp.key»", "«ioProp.value»");
    	    				«ENDFOR»
 						inputConfig.setProperties(inputProperties);
-						com.joeymink.norm.lib.INormInput input = (com.joeymink.norm.lib.INormInput) inputConfig.getConfigFor().newInstance();
+						com.joeymink.norm.lib.INormInput input;
+						try {
+							input = (com.joeymink.norm.lib.INormInput) inputConfig.getConfigFor().newInstance();
+						} catch (InstantiationException | IllegalAccessException e) { throw new RuntimeException(e); }
 						input.setConfig(inputConfig);
 						
 						// Setup output
 						com.joeymink.norm.lib.IoConfig outputConfig = new com.joeymink.norm.lib.IoConfig();
-						outputConfig.setConfigFor(Class.forName("«normFile.output.type.identifier»"));
+						try {
+							outputConfig.setConfigFor(Class.forName("«normFile.output.type.identifier»"));
+						} catch (ClassNotFoundException e) { throw new RuntimeException(e); }
 						java.util.Map<String, String> outputProperties = new java.util.HashMap<String, String>();
    	    				«FOR ioProp : normFile.output.properties»
 							outputProperties.put("«ioProp.key»", "«ioProp.value»");
    	    				«ENDFOR»
 						outputConfig.setProperties(outputProperties);
-						com.joeymink.norm.lib.INormOutput output = (com.joeymink.norm.lib.INormOutput) outputConfig.getConfigFor().newInstance();
+						com.joeymink.norm.lib.INormOutput output;
+						try {
+							output = (com.joeymink.norm.lib.INormOutput) outputConfig.getConfigFor().newInstance();
+						} catch (InstantiationException | IllegalAccessException e) { throw new RuntimeException(e); }
 						output.setConfig(outputConfig); 
+
+						// Notify output of entity types:
+						com.joeymink.norm.lib.EntityType entityType;
+						«FOR entity : normFile.entities»
+							entityType = new com.joeymink.norm.lib.EntityType();
+							entityType.name = "«entity.name»";
+							«IF entity.unique != null»
+								«FOR attribute : entity.unique.attributes»
+									entityType.unique.add("«attribute.name»");
+								«ENDFOR»
+							«ENDIF»
+							output.acceptEntityType(entityType);
+						«ENDFOR»
 						
 						// Instantiate all Entity Normalizers:
 						java.util.List<com.joeymink.norm.lib.INormalization> norms = new java.util.ArrayList<com.joeymink.norm.lib.INormalization>();
@@ -90,11 +117,13 @@ class NormJvmModelInferrer extends AbstractModelInferrer {
 						«ENDFOR»
 						
 						for (com.joeymink.norm.lib.INormInputRecord inputRecord : input) {
+							java.util.List<com.joeymink.norm.lib.OutputEntity> entities = new java.util.ArrayList<com.joeymink.norm.lib.OutputEntity>();
 							for (com.joeymink.norm.lib.INormalization norm : norms)
-								norm.normalize(inputRecord, output);
+								entities.add(norm.normalize(inputRecord, output));
+							output.saveEntities(entities);
 						}
 						
-						} catch (Throwable e) { System.out.println(e); System.exit(1); }
+«««						} catch (Throwable e) { System.out.println(e); System.exit(1); }
    	    			''')]
 				]
 			]
@@ -104,19 +133,32 @@ class NormJvmModelInferrer extends AbstractModelInferrer {
    	def protected inferNorm(IJvmDeclaredTypeAcceptor acceptor, Normalization norm) {
    		acceptor.accept(norm.toClass(norm.fullyQualifiedName)).initializeLater [
 			superTypes += newTypeRef(norm, 'com.joeymink.norm.lib.INormalization')
-			members += norm.toMethod("normalize", norm.newTypeRef(Void::TYPE)) [
+			members += norm.toMethod("normalize", norm.newTypeRef('com.joeymink.norm.lib.OutputEntity')) [
 				parameters += norm.toParameter("inputRecord", newTypeRef(norm, 'com.joeymink.norm.lib.INormInputRecord'))
 				parameters += norm.toParameter("output", newTypeRef(norm, 'com.joeymink.norm.lib.INormOutput'))
     			body = [append('''
 					com.joeymink.norm.lib.OutputEntity entity = new com.joeymink.norm.lib.OutputEntity();
-					entity.name = "«norm.entity_type.name»";
+					entity.name = "«norm.name»";
+					entity.type = "«norm.entity_type.name»";
+					// For each column in the CSV input, for example:
 					«FOR mapping : norm.mappings»
-						entity.fields.put("«mapping.attribute.name»", inputRecord.getField("«mapping.field»"));
+						«IF mapping.normalizedEntity != null»
+							entity.addRef("«mapping.attribute.name»", "«mapping.normalizedEntity.name»");
+						«ELSE»
+							entity.addField("«mapping.attribute.name»", inputRecord.getField("«mapping.field»"));
+						«ENDIF»
 					«ENDFOR»
-					output.saveEntity(entity);
+					return entity;
     			''')]
 			]
 		]
+   	}
+   	
+   	def protected List<String> extractUniqueList(Unique unique) {
+   		var list = new ArrayList<String>()
+   		for (Attribute attribute : unique.attributes)
+   			list.add(attribute.name);
+   		return list;
    	}
 }
 

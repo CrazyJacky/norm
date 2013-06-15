@@ -8,6 +8,20 @@ Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Export-Package: com.csvreader,
  com.joeymink.norm.lib,
  com.joeymink.norm.lib.csv,
- com.joeymink.norm.lib.stdio
+ com.joeymink.norm.lib.stdio,
+ org.neo4j.graphdb
 Bundle-ClassPath: lib/javacsv-2.0.jar,
- .
+ .,
+ lib/concurrentlinkedhashmap-lru-1.3.1.jar,
+ lib/geronimo-jta_1.1_spec-1.1.1.jar,
+ lib/lucene-core-3.6.2.jar,
+ lib/neo4j-cypher-2.0.0-M03.jar,
+ lib/neo4j-graph-algo-2.0.0-M03.jar,
+ lib/neo4j-graph-matching-2.0.0-M03.jar,
+ lib/neo4j-jmx-2.0.0-M03.jar,
+ lib/neo4j-kernel-2.0.0-M03.jar,
+ lib/neo4j-lucene-index-2.0.0-M03.jar,
+ lib/neo4j-shell-2.0.0-M03.jar,
+ lib/neo4j-udc-2.0.0-M03.jar,
+ lib/org.apache.servicemix.bundles.jline-0.9.94_1.jar,
+ lib/server-api-2.0.0-M03.jar
